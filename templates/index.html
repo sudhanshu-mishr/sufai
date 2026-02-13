@@ -11,18 +11,22 @@
     <div class="container">
         <header>
             <div class="logo">SUFAI</div>
-            <p class="subtitle">Your AI Coding Companion</p>
+            <p class="subtitle">Your Expert AI Coding Companion</p>
         </header>
 
         <main>
             <div class="input-section">
-                <div class="api-key-container">
-                    <input type="password" id="api-key" placeholder="Enter your Gemini API Key" />
-                    <small>Get your free API key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
-                </div>
+                <!-- API Key Section - Optional / Configurable -->
+                <details class="api-key-container">
+                    <summary>Configuration (Optional API Key)</summary>
+                    <div class="api-key-input-wrapper">
+                        <input type="password" id="api-key" placeholder="Enter your Gemini API Key (Optional)" />
+                        <small>Leave blank to use the server-configured key (if available). Get your free key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
+                    </div>
+                </details>
 
                 <div class="prompt-container">
-                    <textarea id="prompt" placeholder="Describe the code or website you want to generate..."></textarea>
+                    <textarea id="prompt" placeholder="Describe the code or website you want to generate... (e.g., 'A Python script to scrape news headlines' or 'A React component for a login form')"></textarea>
                     <button id="generate-btn">
                         <span id="btn-text">Generate Code</span>
                         <div class="loader" id="loader"></div>

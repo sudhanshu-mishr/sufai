@@ -19,17 +19,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (!apiKey) {
-            alert('Please enter your Gemini API Key.');
-            return;
-        }
+        // Removed client-side check for API Key. Backend handles it.
 
         generateBtn.disabled = true;
         btnText.textContent = 'Generating...';
         loader.style.display = 'block';
         resultSection.classList.add('hidden');
         resultSection.classList.remove('visible');
-        codePreview.innerHTML = '<p class="placeholder-text">Generating files...</p>';
+        codePreview.innerHTML = '<p class="placeholder-text">Initializing SUFAI and generating files...</p>';
         downloadBtn.disabled = true;
 
         try {
@@ -38,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ prompt, apiKey })
+                body: JSON.stringify({ prompt, apiKey }) // Send apiKey even if empty
             });
 
             if (!response.ok) {
@@ -51,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Render Preview
             codePreview.innerHTML = '';
-            if (Object.keys(currentFiles).length === 0) {
+            if (!currentFiles || Object.keys(currentFiles).length === 0) {
                  codePreview.innerHTML = '<p class="placeholder-text">No code generated.</p>';
             } else {
                 for (const [filename, content] of Object.entries(currentFiles)) {
@@ -81,7 +78,9 @@ document.addEventListener('DOMContentLoaded', () => {
             downloadBtn.disabled = false;
 
         } catch (error) {
+            console.error(error);
             alert(error.message);
+            codePreview.innerHTML = `<p class="error-text">Error: ${error.message}</p>`;
         } finally {
             generateBtn.disabled = false;
             btnText.textContent = 'Generate Code';
