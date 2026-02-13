@@ -16,25 +16,7 @@
 
         <main>
             <div class="input-section">
-                <!-- Configuration Section -->
-                <details class="api-key-container">
-                    <summary>Configuration (Model & Optional API Key)</summary>
-                    <div class="config-wrapper">
-                        <div class="model-select-wrapper">
-                            <label for="model-select">Select AI Model:</label>
-                            <select id="model-select">
-                                <option value="gemini">Gemini (Google)</option>
-                                <option value="huggingface">Open Source GPT (Hugging Face)</option>
-                            </select>
-                        </div>
-
-                        <div class="api-key-input-wrapper">
-                            <label for="api-key">API Key (Optional):</label>
-                            <input type="password" id="api-key" placeholder="Enter Gemini API Key (Optional)" />
-                            <small id="api-key-help">Leave blank to use the server-configured key (if available). Get your free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" id="api-key-link">Google AI Studio</a>.</small>
-                        </div>
-                    </div>
-                </details>
+                <!-- Configuration Section REMOVED -->
 
                 <div class="prompt-container">
                     <textarea id="prompt" placeholder="Describe the code or website you want to generate... (e.g., 'A Python script to scrape news headlines' or 'A React component for a login form')"></textarea>
@@ -57,7 +39,7 @@
         </main>
 
         <footer>
-            <p>Powered by Gemini, Hugging Face & SUFAI</p>
+            <p>Powered by Gemini & Hugging Face</p>
         </footer>
     </div>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>

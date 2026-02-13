@@ -1,10 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const generateBtn = document.getElementById('generate-btn');
     const promptInput = document.getElementById('prompt');
-    const apiKeyInput = document.getElementById('api-key');
-    const modelSelect = document.getElementById('model-select');
-    const apiKeyHelp = document.getElementById('api-key-help');
-    const apiKeyLink = document.getElementById('api-key-link');
     const resultSection = document.getElementById('result-section');
     const codePreview = document.getElementById('code-preview');
     const downloadBtn = document.getElementById('download-btn');
@@ -13,24 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentFiles = null;
 
-    // Handle Model Selection Changes
-    modelSelect.addEventListener('change', () => {
-        const selectedModel = modelSelect.value;
-        if (selectedModel === 'huggingface') {
-            apiKeyInput.placeholder = 'Enter Hugging Face Access Token (Optional)';
-            apiKeyHelp.innerHTML = 'Leave blank to use the server-configured token (if available). Get your free token from <a href="https://huggingface.co/settings/tokens" target="_blank" id="api-key-link">Hugging Face Settings</a>.';
-        } else {
-            apiKeyInput.placeholder = 'Enter Gemini API Key (Optional)';
-            apiKeyHelp.innerHTML = 'Leave blank to use the server-configured key (if available). Get your free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" id="api-key-link">Google AI Studio</a>.';
-        }
-        // Re-bind link since innerHTML replacement destroyed the old element reference if we used it directly,
-        // but here we just replaced the innerHTML so the ID inside it is new.
-    });
-
     generateBtn.addEventListener('click', async () => {
         const prompt = promptInput.value.trim();
-        const apiKey = apiKeyInput.value.trim();
-        const model = modelSelect.value;
 
         if (!prompt) {
             alert('Please describe what you want to generate.');
@@ -46,12 +26,13 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadBtn.disabled = true;
 
         try {
+            // Simplified request: no apiKey or model sent from client
             const response = await fetch('/api/generate', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ prompt, apiKey, model })
+                body: JSON.stringify({ prompt })
             });
 
             if (!response.ok) {

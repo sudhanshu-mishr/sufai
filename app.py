@@ -25,35 +25,38 @@ def clean_json_text(text):
         text = text[:-3]
     return text.strip()
 
-def generate_code_from_gemini(prompt, api_key):
-    effective_api_key = api_key if api_key else os.environ.get('GEMINI_API_KEY')
+def generate_code_from_gemini(prompt, api_key=None):
+    # Always prioritize server key
+    effective_api_key = os.environ.get('GEMINI_API_KEY')
 
     if not effective_api_key:
-        return {"error": "Gemini API Key is missing. Please configure GEMINI_API_KEY on the server or provide one in settings."}
+        return {"error": "Server Configuration Error: GEMINI_API_KEY is missing."}
 
     genai.configure(api_key=effective_api_key)
     try:
         model = genai.GenerativeModel('gemini-1.5-flash')
 
         system_instruction = """
-        You are SUFAI, an elite AI Coding Agent.
-        Your Mission: Generate high-quality, production-ready code based on user requests.
+        You are SUFAI, an elite AI Coding Agent specializing in web development.
+        Your Mission: Generate complete, functional, and modern code for simple websites based on user requests.
 
         Guidelines:
-        1.  **Project Structure**: If the request implies a full project, generate a complete file structure.
-        2.  **Code Quality**: Write clean, modern, and well-commented code. Follow best practices for the language.
-        3.  **Completeness**: Ensure all necessary imports, configuration files (like requirements.txt, package.json), and instructions (README.md) are included.
-        4.  **No Markdown Wrapper**: You must output PURE JSON. Do not wrap the JSON in markdown code blocks (```json ... ```).
-        5.  **JSON Format**: The output must be a valid JSON object where keys are filenames (including paths if needed, e.g., "src/main.py") and values are the file contents strings.
-
-        Persona:
-        -   You are helpful, precise, and expert-level.
-        -   You prefer modern frameworks and robust solutions.
+        1.  **Output Format**: You must output PURE JSON. Keys are filenames, values are file contents.
+        2.  **Single Page vs Multi-file**:
+            - If the request is for a simple site, prefer a structure with `index.html`, `style.css`, and `script.js` (if needed).
+            - If the request is very simple, you can combine CSS/JS into `index.html` but separate files are generally cleaner.
+        3.  **Content Quality**:
+            - Use modern CSS (Flexbox, Grid, Variables).
+            - Use semantic HTML5.
+            - Add comments explaining key sections.
+            - Ensure the site is responsive.
+        4.  **Completeness**: Include a `README.md` explaining how to open/run the site.
 
         Example Output Format:
         {
-            "main.py": "print('Hello World')",
-            "README.md": "# Project\n\nRun with `python main.py`"
+            "index.html": "<!DOCTYPE html><html>...</html>",
+            "style.css": "body { background: #333; }",
+            "README.md": "# My Site\n\nOpen index.html in your browser."
         }
         """
 
@@ -67,36 +70,27 @@ def generate_code_from_gemini(prompt, api_key):
     except Exception as e:
         return {"error": f"Gemini Error: {str(e)}"}
 
-def generate_code_from_huggingface(prompt, api_key):
-    effective_api_key = api_key if api_key else os.environ.get('HUGGINGFACE_API_KEY')
+def generate_code_from_huggingface(prompt, api_key=None):
+    # Always prioritize server key
+    effective_api_key = os.environ.get('HUGGINGFACE_API_KEY')
 
-    # Check if we have a key, if not we might still try if the model allows free anonymous access (rare for inference API),
-    # but usually requires a token.
     if not effective_api_key:
-        return {"error": "Hugging Face Token is missing. Please configure HUGGINGFACE_API_KEY on the server or provide one in settings."}
+         return {"error": "Server Configuration Error: HUGGINGFACE_API_KEY is missing."}
 
     try:
-        # Using Meta-Llama-3-8B-Instruct which is often available
         repo_id = "meta-llama/Meta-Llama-3-8B-Instruct"
-
         client = InferenceClient(token=effective_api_key)
 
-        system_instruction = """You are SUFAI, an elite AI Coding Agent.
-Your task is to generate code based on the user's request.
-IMPORTANT: You must format your response strictly as a JSON object where keys are filenames and values are the file contents.
-Do NOT include any markdown formatting, explanations, or text outside the JSON object.
-Example: {"main.py": "print('Hello')"}
+        system_instruction = """You are SUFAI, a web development AI.
+Generate code for the user's request in valid JSON format only.
+Keys: filenames. Values: file content.
+Ensure HTML, CSS, and JS are valid and modern.
 """
 
         messages = [
             {"role": "system", "content": system_instruction},
             {"role": "user", "content": prompt}
         ]
-
-        # InferenceClient.chat_completion is correct for newer hugginface_hub versions
-        # Ensure we pass the model name if initialized without one, or just rely on default if client init with token only?
-        # InferenceClient(token=...) defaults to a generic endpoint, usually we need to specify model in call or init.
-        # Let's specify it in the call.
 
         response = client.chat_completion(
             messages=messages,
@@ -107,13 +101,11 @@ Example: {"main.py": "print('Hello')"}
 
         text = response.choices[0].message.content.strip()
 
-        # Attempt to clean up JSON
+        # Hugging face models sometimes wrap in backticks too
         try:
             cleaned_text = clean_json_text(text)
             return json.loads(cleaned_text)
         except json.JSONDecodeError:
-            # Fallback if the model returned extra text despite instructions
-            # Sometimes models return "Here is the JSON:\n{...}"
             start = text.find('{')
             end = text.rfind('}') + 1
             if start != -1 and end != -1:
@@ -128,22 +120,29 @@ Example: {"main.py": "print('Hello')"}
 def generate():
     data = request.get_json()
     prompt = data.get('prompt')
-    api_key = data.get('apiKey')
-    model_type = data.get('model', 'gemini') # Default to gemini
 
     if not prompt:
         return jsonify({"error": "Prompt is required"}), 400
 
-    if model_type == 'huggingface':
-        generated_files = generate_code_from_huggingface(prompt, api_key)
-    else:
-        generated_files = generate_code_from_gemini(prompt, api_key)
+    # Primary: Gemini
+    generated_files = generate_code_from_gemini(prompt)
 
-    if isinstance(generated_files, dict) and "error" in generated_files:
-        status_code = 500
-        if "API Key is missing" in generated_files["error"] or "Token is missing" in generated_files["error"]:
-            status_code = 401
-        return jsonify(generated_files), status_code
+    # Fallback: Hugging Face if Gemini fails specifically due to configuration/key error
+    if "error" in generated_files:
+        error_msg = str(generated_files["error"])
+        if "Server Configuration Error" in error_msg or "Gemini API Key is missing" in error_msg:
+             print("Gemini unavailable, attempting fallback to Hugging Face...")
+             hf_files = generate_code_from_huggingface(prompt)
+             # If HF works, use it. If HF also errors, return the original Gemini error (or HF error)
+             if "error" not in hf_files:
+                 generated_files = hf_files
+             else:
+                 # If both fail, return concatenated error or just the Gemini one?
+                 # Let's return the HF error as it was the last attempt
+                 generated_files = hf_files
+
+    if "error" in generated_files:
+        return jsonify(generated_files), 500
 
     return jsonify({"files": generated_files})
 
