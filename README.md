@@ -35,3 +35,25 @@ SUFAI is a web-based AI coding assistant that generates code based on your promp
 
 -   Flask
 -   google-generativeai
+-   gunicorn
+
+# Deployment on Render
+
+This project is configured for deployment on [Render](https://render.com).
+
+## Automatic Deployment
+
+1.  Create a new Web Service on Render.
+2.  Connect your GitHub repository.
+3.  Render will automatically detect the configuration from `render.yaml`.
+    -   **Runtime**: Python
+    -   **Build Command**: `pip install -r requirements.txt`
+    -   **Start Command**: `gunicorn app:app`
+
+## Manual Deployment
+
+If you prefer to configure it manually:
+
+-   **Environment**: Python
+-   **Build Command**: `pip install -r requirements.txt`
+-   **Start Command**: `gunicorn app:app`
