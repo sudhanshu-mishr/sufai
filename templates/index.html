@@ -16,12 +16,23 @@
 
         <main>
             <div class="input-section">
-                <!-- API Key Section - Optional / Configurable -->
+                <!-- Configuration Section -->
                 <details class="api-key-container">
-                    <summary>Configuration (Optional API Key)</summary>
-                    <div class="api-key-input-wrapper">
-                        <input type="password" id="api-key" placeholder="Enter your Gemini API Key (Optional)" />
-                        <small>Leave blank to use the server-configured key (if available). Get your free key from <a href="https://aistudio.google.com/app/apikey" target="_blank">Google AI Studio</a></small>
+                    <summary>Configuration (Model & Optional API Key)</summary>
+                    <div class="config-wrapper">
+                        <div class="model-select-wrapper">
+                            <label for="model-select">Select AI Model:</label>
+                            <select id="model-select">
+                                <option value="gemini">Gemini (Google)</option>
+                                <option value="huggingface">Open Source GPT (Hugging Face)</option>
+                            </select>
+                        </div>
+
+                        <div class="api-key-input-wrapper">
+                            <label for="api-key">API Key (Optional):</label>
+                            <input type="password" id="api-key" placeholder="Enter Gemini API Key (Optional)" />
+                            <small id="api-key-help">Leave blank to use the server-configured key (if available). Get your free key from <a href="https://aistudio.google.com/app/apikey" target="_blank" id="api-key-link">Google AI Studio</a>.</small>
+                        </div>
                     </div>
                 </details>
 
@@ -46,7 +57,7 @@
         </main>
 
         <footer>
-            <p>Powered by Gemini & SUFAI</p>
+            <p>Powered by Gemini, Hugging Face & SUFAI</p>
         </footer>
     </div>
     <script src="{{ url_for('static', filename='js/script.js') }}"></script>
